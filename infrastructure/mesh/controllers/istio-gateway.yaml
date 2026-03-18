@@ -4,6 +4,8 @@ metadata:
   name: istio-gateway
   namespace: istio-ingress
 spec:
+  dependsOn:
+    - name: istiod
   interval: 30m
   chart:
     spec:

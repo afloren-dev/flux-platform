@@ -55,7 +55,7 @@ jobs:
         run: |
           flux create source git flux-platform \
             --url=https://github.com/${{ github.repository }} \
-            --branch=${{ github.ref_name }} \
+            --branch=${{ github.head_ref || github.ref_name }} \
             --interval=1m
 
       - name: Apply core module
