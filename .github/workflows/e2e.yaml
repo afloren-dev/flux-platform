@@ -31,7 +31,7 @@ jobs:
           find infrastructure -name '*.yaml' -type f | xargs kubeconform -ignore-missing-schemas
 
   kubernetes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-m
     needs: validate
     steps:
       - uses: actions/checkout@v4
