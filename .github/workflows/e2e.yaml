@@ -77,7 +77,50 @@ jobs:
             --wait \
             --timeout=15m
 
-      - name: Check reconciliation
+      - name: Debug failure
+        if: failure()
         run: |
-          flux get all -A
-          kubectl get all -A
+          mkdir -p /tmp/flux-debug/flux
+
+          echo "==> Flux state:"
+          flux get kustomizations --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/kustomizations.txt
+          flux get helmreleases --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/helmreleases.txt
+          flux get sources all --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/sources.txt
+          kubectl get pods --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/pods.txt
+
+          echo "==> Collecting cluster-info dump (organized by namespace/pod)..."
+          kubectl cluster-info dump --all-namespaces \
+            --output-directory=/tmp/flux-debug/cluster-dump 2>/dev/null || true
+
+          echo "==> Exporting KinD node logs (organized by node)..."
+          kind export logs /tmp/flux-debug/kind-logs --name=chart-testing 2>/dev/null || true
+
+      - name: Write job summary
+        if: failure()
+        run: |
+          {
+            echo "## E2E Failure Debug Summary"
+            echo ""
+            echo "### Flux Kustomizations"
+            echo '```'
+            cat /tmp/flux-debug/flux/kustomizations.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+            echo ""
+            echo "### Flux HelmReleases"
+            echo '```'
+            cat /tmp/flux-debug/flux/helmreleases.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+            echo ""
+            echo "### All Pods"
+            echo '```'
+            cat /tmp/flux-debug/flux/pods.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flux-debug-${{ github.run_id }}
+          path: /tmp/flux-debug/
+          retention-days: 7
