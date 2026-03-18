@@ -74,7 +74,8 @@ jobs:
             --path=./infrastructure/mesh \
             --prune=true \
             --interval=10m \
-            --wait
+            --wait \
+            --timeout=15m
 
       - name: Check reconciliation
         run: |
