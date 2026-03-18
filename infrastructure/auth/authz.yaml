@@ -1,0 +1,20 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: ext-authz
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      istio: gateway
+  action: CUSTOM
+  provider:
+    name: oauth2-proxy
+  rules:
+    - to:
+        - operation:
+            hosts:
+              - "*.${DOMAIN}"
+            notPaths:
+              - /oauth2/*
+              - /healthz

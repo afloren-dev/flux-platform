@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  hosts:
+    - dashboard.${DOMAIN}
+  gateways:
+    - istio-ingress/gateway
+  http:
+    - route:
+        - destination:
+            host: kubernetes-dashboard
+            port:
+              number: 80

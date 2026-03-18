@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-istio
+  namespace: knative-serving
+data:
+  gateway.knative-serving.knative-ingress-gateway: istio-ingress/istio-gateway
+  local-gateways.knative-serving.knative-local-gateway: istio-system/knative-local-gateway
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-domain
+  namespace: knative-serving
+data:
+  ${DOMAIN}: ""

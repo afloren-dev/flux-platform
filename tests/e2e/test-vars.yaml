@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-vars
+  namespace: flux-system
+data:
+  DOMAIN: "test.example.com"
+  ACME_EMAIL: "admin@test.example.com"
+  GCP_PROJECT: ""
+  TRACING_SAMPLE_RATE: "100"
+  PROMETHEUS_RETENTION: "24h"
+  LOKI_RETENTION: "12h"
+  INGRESS_TYPE: "NodePort"
+  GRAFANA_ADMIN_PASSWORD: "admin"

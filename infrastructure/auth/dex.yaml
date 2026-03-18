@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dex-config
+  namespace: auth
+data:
+  config.yaml: |
+    issuer: https://dex.${DOMAIN}
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+    web:
+      http: 0.0.0.0:5556
+    connectors:
+      - type: google
+        id: google
+        name: Google
+        config:
+          clientID: ${OAUTH_CLIENT_ID}
+          clientSecret: ${OAUTH_CLIENT_SECRET}
+          redirectURI: https://dex.${DOMAIN}/callback
+    oauth2:
+      skipApprovalScreen: true
+    staticClients:
+      - id: oauth2-proxy
+        redirectURIs:
+          - 'https://oauth2-proxy.${DOMAIN}/oauth2/callback'
+        name: 'OAuth2 Proxy'
+        secret: ${OAUTH_CLIENT_SECRET}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dex
+  namespace: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dex
+  template:
+    metadata:
+      labels:
+        app: dex
+    spec:
+      containers:
+        - name: dex
+          image: ghcr.io/dexidp/dex:v2.41.1
+          command:
+            - /usr/local/bin/dex
+            - serve
+            - /etc/dex/config.yaml
+          ports:
+            - name: http
+              containerPort: 5556
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dex
+      volumes:
+        - name: config
+          configMap:
+            name: dex-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  namespace: auth
+spec:
+  selector:
+    app: dex
+  ports:
+    - name: http
+      port: 5556
+      targetPort: 5556
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: dex
+  namespace: auth
+spec:
+  hosts:
+    - dex.${DOMAIN}
+  gateways:
+    - istio-ingress/gateway
+  http:
+    - route:
+        - destination:
+            host: dex
+            port:
+              number: 5556

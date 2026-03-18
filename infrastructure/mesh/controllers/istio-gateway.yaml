@@ -1,0 +1,27 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-gateway
+  namespace: istio-ingress
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: gateway
+      version: '>=1.23.0'
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+  values:
+    service:
+      type: ${INGRESS_TYPE}
+      ports:
+        - name: http
+          port: 80
+          targetPort: 80
+          protocol: TCP
+        - name: https
+          port: 443
+          targetPort: 443
+          protocol: TCP

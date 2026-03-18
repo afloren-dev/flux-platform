@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - controllers/namespace.yaml
+  - controllers/istio-base.yaml
+  - controllers/istiod.yaml
+  - controllers/istio-gateway.yaml
+  - configs/mesh-config.yaml
+  - configs/ingress-class.yaml
+  - configs/gateway.yaml
