@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Flux Platform is a reusable Flux CD infrastructure template providing modular Kubernetes platform components. It is consumed by cluster instance repos (like `flux-cluster-template`) via Flux `GitRepository` + `Kustomization` resources. Configuration is injected at deploy time through a `platform-vars` ConfigMap and `platform-secrets` Secret using Flux's `postBuild.substituteFrom`.
 
+## Dev Environment Setup
+
+This repo uses [mise](https://mise.jdx.dev/) to manage dev tools (kubectl, kubeconform, flux, kind, pre-commit, yamllint). Install mise and activate all tools:
+
+```bash
+curl https://mise.run | sh
+mise install
+```
+
+After `mise install`, all CLI tools are available in your shell. Run `pre-commit run --all-files` to verify.
+
 ## Common Commands
 
 ```bash

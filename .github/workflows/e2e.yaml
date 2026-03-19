@@ -14,17 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install yamllint
-        run: pip install yamllint
+      - name: Install dev tools
+        uses: jdx/mise-action@v2
 
       - name: Run yamllint
         run: yamllint .
-
-      - name: Install kubeconform
-        run: |
-          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
-          tar xf kubeconform-linux-amd64.tar.gz
-          sudo mv kubeconform /usr/local/bin/
 
       - name: Validate manifests
         run: |
