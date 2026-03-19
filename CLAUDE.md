@@ -114,6 +114,13 @@ Each module under `infrastructure/` is self-contained with a `kustomization.yaml
 
 Module dependency order is enforced by consumers via `dependsOn` in their Kustomization specs (e.g., mesh depends on core, auth depends on mesh+certs).
 
+### Variable Substitution
+
+All manifests use `${VAR_NAME}` placeholders substituted by Flux at reconciliation time.
+In the E2E workflow, substitution is configured centrally in `tests/e2e/deploy.sh` via
+`--substitute-from`. When adding new modules, add them to this script — do NOT add
+inline `flux create kustomization` commands to the workflow directly.
+
 ## YAML Style Rules
 
 Configured in `.yamllint.yaml`:

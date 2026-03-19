@@ -58,35 +58,8 @@ jobs:
             --branch=${{ github.head_ref || github.ref_name }} \
             --interval=1m
 
-      - name: Apply core module
-        run: |
-          flux create kustomization platform-core \
-            --source=GitRepository/flux-platform \
-            --path=./infrastructure/core \
-            --prune=true \
-            --interval=10m \
-            --wait
-
-      - name: Apply mesh controllers
-        run: |
-          flux create kustomization platform-mesh-controllers \
-            --source=GitRepository/flux-platform \
-            --path=./infrastructure/mesh/controllers \
-            --prune=true \
-            --interval=10m \
-            --wait \
-            --timeout=5m
-
-      - name: Apply mesh configs
-        run: |
-          flux create kustomization platform-mesh-configs \
-            --source=GitRepository/flux-platform \
-            --path=./infrastructure/mesh/configs \
-            --prune=true \
-            --interval=10m \
-            --depends-on=platform-mesh-controllers \
-            --wait \
-            --timeout=5m
+      - name: Deploy platform modules
+        run: bash tests/e2e/deploy.sh
 
       - name: Debug failure
         if: failure()
