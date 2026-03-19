@@ -1,27 +1,79 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FLUX_SOURCE="GitRepository/flux-platform"
-SUBS="--substitute-from=ConfigMap/platform-vars --substitute-from=Secret/platform-secrets"
+# Apply Kustomization CRD manifests with postBuild.substituteFrom
+# (flux create kustomization does not support --substitute-from)
+kubectl apply -f - <<'EOF'
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: platform-core
+  namespace: flux-system
+spec:
+  interval: 10m
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-platform
+  path: ./infrastructure/core
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: platform-vars
+      - kind: Secret
+        name: platform-secrets
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: platform-mesh-controllers
+  namespace: flux-system
+spec:
+  interval: 10m
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-platform
+  path: ./infrastructure/mesh/controllers
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: platform-vars
+      - kind: Secret
+        name: platform-secrets
+  wait: true
+  timeout: 5m
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: platform-mesh-configs
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: platform-mesh-controllers
+  interval: 10m
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-platform
+  path: ./infrastructure/mesh/configs
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: platform-vars
+      - kind: Secret
+        name: platform-secrets
+  wait: true
+  timeout: 5m
+EOF
 
-# Core module
-flux create kustomization platform-core \
-  --source=$FLUX_SOURCE \
-  --path=./infrastructure/core \
-  --prune=true --interval=10m \
-  $SUBS --wait
+echo "Waiting for platform-core..."
+kubectl -n flux-system wait kustomization/platform-core --for=condition=Ready --timeout=5m
 
-# Mesh controllers (HelmReleases that install CRDs)
-flux create kustomization platform-mesh-controllers \
-  --source=$FLUX_SOURCE \
-  --path=./infrastructure/mesh/controllers \
-  --prune=true --interval=10m \
-  $SUBS --wait --timeout=5m
+echo "Waiting for platform-mesh-controllers..."
+kubectl -n flux-system wait kustomization/platform-mesh-controllers --for=condition=Ready --timeout=5m
 
-# Mesh configs (CRD-dependent resources, must wait for controllers)
-flux create kustomization platform-mesh-configs \
-  --source=$FLUX_SOURCE \
-  --path=./infrastructure/mesh/configs \
-  --prune=true --interval=10m \
-  --depends-on=platform-mesh-controllers \
-  $SUBS --wait --timeout=5m
+echo "Waiting for platform-mesh-configs..."
+kubectl -n flux-system wait kustomization/platform-mesh-configs --for=condition=Ready --timeout=5m

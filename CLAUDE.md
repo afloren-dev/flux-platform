@@ -117,9 +117,10 @@ Module dependency order is enforced by consumers via `dependsOn` in their Kustom
 ### Variable Substitution
 
 All manifests use `${VAR_NAME}` placeholders substituted by Flux at reconciliation time.
-In the E2E workflow, substitution is configured centrally in `tests/e2e/deploy.sh` via
-`--substitute-from`. When adding new modules, add them to this script — do NOT add
-inline `flux create kustomization` commands to the workflow directly.
+In the E2E workflow, substitution is configured via `postBuild.substituteFrom` in the
+Kustomization CRD manifests applied by `tests/e2e/deploy.sh`. When adding new modules,
+add a Kustomization manifest to this script — do NOT add inline `flux create kustomization`
+commands to the workflow (the CLI does not support `substituteFrom`).
 
 ## YAML Style Rules
 
