@@ -55,27 +55,11 @@ jobs:
         run: |
           flux create source git flux-platform \
             --url=https://github.com/${{ github.repository }} \
-            --branch=${{ github.ref_name }} \
+            --branch=${{ github.head_ref || github.ref_name }} \
             --interval=1m
 
-      - name: Apply core module
-        run: |
-          flux create kustomization platform-core \
-            --source=GitRepository/flux-platform \
-            --path=./infrastructure/core \
-            --prune=true \
-            --interval=10m \
-            --wait
-
-      - name: Apply mesh module
-        run: |
-          flux create kustomization platform-mesh \
-            --source=GitRepository/flux-platform \
-            --path=./infrastructure/mesh \
-            --prune=true \
-            --interval=10m \
-            --wait \
-            --timeout=15m
+      - name: Deploy platform modules
+        run: bash tests/e2e/deploy.sh
 
       - name: Debug failure
         if: failure()
@@ -87,6 +71,13 @@ jobs:
           flux get helmreleases --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/helmreleases.txt
           flux get sources all --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/sources.txt
           kubectl get pods --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/pods.txt
+
+          echo "==> Kubernetes events (sorted by time):"
+          kubectl get events --all-namespaces --sort-by='.lastTimestamp' 2>&1 | tail -50 | tee /tmp/flux-debug/flux/events.txt
+
+          echo "==> Flux controller logs:"
+          kubectl logs -n flux-system deploy/kustomize-controller --tail=50 2>&1 | tee /tmp/flux-debug/flux/kustomize-controller.txt
+          kubectl logs -n flux-system deploy/helm-controller --tail=50 2>&1 | tee /tmp/flux-debug/flux/helm-controller.txt
 
           echo "==> Collecting cluster-info dump (organized by namespace/pod)..."
           kubectl cluster-info dump --all-namespaces \
@@ -111,9 +102,29 @@ jobs:
             cat /tmp/flux-debug/flux/helmreleases.txt 2>/dev/null || echo "(not captured)"
             echo '```'
             echo ""
+            echo "### Flux Sources"
+            echo '```'
+            cat /tmp/flux-debug/flux/sources.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+            echo ""
             echo "### All Pods"
             echo '```'
             cat /tmp/flux-debug/flux/pods.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+            echo ""
+            echo "### Recent Events"
+            echo '```'
+            cat /tmp/flux-debug/flux/events.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+            echo ""
+            echo "### Flux Controller Logs (kustomize-controller)"
+            echo '```'
+            cat /tmp/flux-debug/flux/kustomize-controller.txt 2>/dev/null || echo "(not captured)"
+            echo '```'
+            echo ""
+            echo "### Flux Controller Logs (helm-controller)"
+            echo '```'
+            cat /tmp/flux-debug/flux/helm-controller.txt 2>/dev/null || echo "(not captured)"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 

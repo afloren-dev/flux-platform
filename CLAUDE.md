@@ -30,6 +30,74 @@ flux create source git flux-platform --url=https://github.com/afloren-dev/flux-p
 flux create kustomization platform-core --source=flux-platform --path=./infrastructure/core --prune=true
 ```
 
+### Flux CLI
+
+```bash
+# Check status of all Flux resources
+flux get all --all-namespaces
+
+# Reconcile a specific kustomization
+flux reconcile kustomization <name> --with-source
+
+# Suspend/resume reconciliation
+flux suspend kustomization <name>
+flux resume kustomization <name>
+```
+
+### Debugging
+
+```bash
+# Check Flux logs
+kubectl -n flux-system logs deploy/source-controller
+kubectl -n flux-system logs deploy/kustomize-controller
+kubectl -n flux-system logs deploy/helm-controller
+
+# Get all pods across namespaces
+kubectl get pods --all-namespaces
+
+# Inspect a failing HelmRelease
+flux get helmreleases --all-namespaces
+kubectl describe helmrelease <name> -n <namespace>
+```
+
+### Accessing CI Debug Artifacts
+
+When an E2E run fails, structured debug artifacts are uploaded automatically. Artifacts are retained for 7 days.
+
+**Quick triage — view job summary inline (no download):**
+```bash
+gh run list --workflow=e2e.yaml --status=failure --limit=5
+gh run view <run-id>   # shows Flux kustomizations, helmreleases, and pod status
+```
+
+**Full investigation — download all structured logs:**
+```bash
+gh run download <run-id> --dir /tmp/flux-run-<run-id>
+```
+
+Artifact directory layout:
+```
+flux-debug-<run-id>/
+  flux/
+    kustomizations.txt   # flux get kustomizations --all-namespaces
+    helmreleases.txt     # flux get helmreleases --all-namespaces
+    sources.txt          # flux get sources all --all-namespaces
+    pods.txt             # kubectl get pods --all-namespaces
+    events.txt           # kubectl get events (sorted by time)
+    kustomize-controller.txt  # kustomize-controller logs
+    helm-controller.txt       # helm-controller logs
+  cluster-dump/
+    <namespace>/
+      <pod-name>/
+        <container>.log  # per-container logs via kubectl cluster-info dump
+      events.json
+      pods.json
+  kind-logs/
+    kind-control-plane/
+      journal.log        # kubelet / containerd logs
+      containers/        # per-container logs from node perspective
+```
+
 ## CI Pipeline
 
 GitHub Actions workflow (`.github/workflows/e2e.yaml`) runs on push/PR to `main`:
@@ -45,6 +113,14 @@ Each module under `infrastructure/` is self-contained with a `kustomization.yaml
 **Optional modules:** `auth`, `certs`, `monitoring`, `tracing`, `autoscaling`, `dashboard`
 
 Module dependency order is enforced by consumers via `dependsOn` in their Kustomization specs (e.g., mesh depends on core, auth depends on mesh+certs).
+
+### Variable Substitution
+
+All manifests use `${VAR_NAME}` placeholders substituted by Flux at reconciliation time.
+In the E2E workflow, substitution is configured via `postBuild.substituteFrom` in the
+Kustomization CRD manifests applied by `tests/e2e/deploy.sh`. When adding new modules,
+add a Kustomization manifest to this script — do NOT add inline `flux create kustomization`
+commands to the workflow (the CLI does not support `substituteFrom`).
 
 ## YAML Style Rules
 
