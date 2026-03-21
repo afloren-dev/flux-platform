@@ -20,6 +20,9 @@ jobs:
       - name: Run yamllint
         run: yamllint .
 
+      - name: Validate platform variables
+        run: bash tests/e2e/validate-vars.sh
+
       - name: Validate manifests
         run: |
           find infrastructure -name '*.yaml' -type f | xargs kubeconform -ignore-missing-schemas

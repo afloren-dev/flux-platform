@@ -5,6 +5,7 @@ kubeconform = "latest"
 "flux2" = "latest"
 kind = "latest"
 uv = "latest"
+shellcheck = "latest"
 
 [tools."pipx:pre-commit"]
 version = "latest"

@@ -13,3 +13,24 @@ repos:
     hooks:
       - id: yamllint
         args: [-c=.yamllint.yaml]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: local
+    hooks:
+      - id: kubeconform
+        name: Validate Kubernetes manifests
+        entry: bash -c 'kubeconform -ignore-missing-schemas "$@"' --
+        language: system
+        files: ^infrastructure/.*\.yaml$
+        types: [yaml]
+
+      - id: check-platform-vars
+        name: Check platform variable coverage
+        entry: bash tests/e2e/validate-vars.sh
+        language: system
+        pass_filenames: false
+        files: ^(infrastructure/.*\.yaml|tests/e2e/test-(vars|secrets)\.yaml)$

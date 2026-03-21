@@ -32,4 +32,4 @@ spec:
         tracing:
           sampling: ${TRACING_SAMPLE_RATE}
           zipkin:
-            address: jaeger-collector.observability:9411
+            address: ${TRACING_COLLECTOR_ADDRESS}

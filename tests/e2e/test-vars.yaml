@@ -12,3 +12,4 @@ data:
   LOKI_RETENTION: "12h"
   INGRESS_TYPE: "NodePort"
   GRAFANA_ADMIN_PASSWORD: "admin"
+  TRACING_COLLECTOR_ADDRESS: "jaeger-collector.observability:9411"
