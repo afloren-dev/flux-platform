@@ -4,6 +4,7 @@ kubectl = "latest"
 kubeconform = "latest"
 "flux2" = "latest"
 kind = "latest"
+uv = "latest"
 
 [tools."pipx:pre-commit"]
 version = "latest"
