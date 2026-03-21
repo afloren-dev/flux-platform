@@ -67,11 +67,14 @@ jobs:
           kubectl get pods --all-namespaces 2>&1 | tee /tmp/flux-debug/flux/pods.txt
 
           echo "==> Kubernetes events (sorted by time):"
-          kubectl get events --all-namespaces --sort-by='.lastTimestamp' 2>&1 | tail -50 | tee /tmp/flux-debug/flux/events.txt
+          kubectl get events --all-namespaces --sort-by='.lastTimestamp' 2>&1 \
+            | tail -50 | tee /tmp/flux-debug/flux/events.txt
 
           echo "==> Flux controller logs:"
-          kubectl logs -n flux-system deploy/kustomize-controller --tail=50 2>&1 | tee /tmp/flux-debug/flux/kustomize-controller.txt
-          kubectl logs -n flux-system deploy/helm-controller --tail=50 2>&1 | tee /tmp/flux-debug/flux/helm-controller.txt
+          kubectl logs -n flux-system deploy/kustomize-controller --tail=50 2>&1 \
+            | tee /tmp/flux-debug/flux/kustomize-controller.txt
+          kubectl logs -n flux-system deploy/helm-controller --tail=50 2>&1 \
+            | tee /tmp/flux-debug/flux/helm-controller.txt
 
           echo "==> Collecting cluster-info dump (organized by namespace/pod)..."
           kubectl cluster-info dump --all-namespaces \
