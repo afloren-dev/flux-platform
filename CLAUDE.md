@@ -12,6 +12,7 @@ This repo uses [mise](https://mise.jdx.dev/) to manage dev tools (kubectl, kubec
 
 ```bash
 curl https://mise.run | sh
+mise trust   # required on first clone to trust .mise.toml
 mise install
 ```
 
