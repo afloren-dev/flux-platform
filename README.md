@@ -1,5 +1,10 @@
 # Flux Platform
 
+> [!WARNING]
+> **Retired (2026-11-07).** This repo was part of an experiment with a Flux CD and Knative platform. It was never deployed to a real cluster and is no longer maintained. It will be archived.
+>
+> afloren.dev apps now deploy from a cloud-neutral app spec (`app.yaml`) through [`afloren-dev/terraform`](https://github.com/afloren-dev/terraform). Kubernetes may come back later as one backend for that spec; see [`docs/kubernetes-backend.md`](https://github.com/afloren-dev/terraform/blob/main/docs/kubernetes-backend.md) there for what we learned here. Don't build on this repo.
+
 Reusable Flux CD infrastructure template with autoscaling and telemetry.
 
 ## Overview
